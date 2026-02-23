@@ -97,7 +97,7 @@ class ListaChequeoEjecucionController extends Controller
 
     public function Index()
     {
-        $fechaActual = date('d-m-Y');
+        $fechaActual = date('d-m-Y H:i:s');
 
         $idListaEjecutada = \Request::segment(4);
         if (!$this->listaEjecutada->where('id', '=', $idListaEjecutada)->exists())
