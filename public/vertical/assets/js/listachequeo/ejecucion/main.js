@@ -153,7 +153,8 @@ function IniciarVista() {
                                 pregunta.opcionesGeneralesLlenasAdjuntos,
                                 pregunta.plan_accion_manu,
                                 pregunta.opcionesGeneralesLlenasPlanAccionM,
-                                pregunta.tipo_respuesta_id
+                                pregunta.tipo_respuesta_id,
+                                pregunta
                             );
                         });
 
@@ -220,7 +221,7 @@ function IniciarVista() {
     });
 }
 
-function ComponentePregunta(idPregunta, pregunta, respuestas, opcionesRespuesta, ponderado, opcLlenas, opcLlenasFotos, opcLlenasAdjuntos, planAccion, opcionesGeneralesLlenasPlanAccionM, tipoRespuestaBk) {
+function ComponentePregunta(idPregunta, pregunta, respuestas, opcionesRespuesta, ponderado, opcLlenas, opcLlenasFotos, opcLlenasAdjuntos, planAccion, opcionesGeneralesLlenasPlanAccionM, tipoRespuestaBk, objetoPregunta) {
     let string = '';
     console.log(respuestas)
     let stringRespuestas = '';
@@ -595,7 +596,7 @@ function ComponentePregunta(idPregunta, pregunta, respuestas, opcionesRespuesta,
                                         </div>`;
                 }
                 break;
-            case 15: //RESPUESTA SELECTOR MOTIVO
+            case 15: //RESPUESTA RANGO
                 if (item.id == 0) //N/A
                 {
                     let stringClase = '';
@@ -617,14 +618,15 @@ function ComponentePregunta(idPregunta, pregunta, respuestas, opcionesRespuesta,
                         stringClase = stringClase = 'respuestaSeleccion';
                     else
                         stringClase = '';
-
+                    
                     stringRespuestas += `<div class="m-l-5 m-r-5">
                                             <div class="form-group">
-                                                <div class="respuesta bg-gray ${stringClase}" tipoRespuesta="${tipoRespuestaBk}" respuestaAbierta="${item.rta_abierta}" onclick="OnClickRespuesta(this);" idRespuesta="${item.id}">
+                                                <div class="respuesta bg-gray ${stringClase}" valorMin="${objetoPregunta.valor_min}" valorMax="${objetoPregunta.valor_max}" tipoRespuesta="${tipoRespuestaBk}" respuestaAbierta="${item.rta_abierta}" onclick="OnClickRespuesta(this);" idRespuesta="${item.id}">
                                                    Seleccionar
                                                 </div>
                                             </div>
-                                        </div>`;
+                                        </div>`; 
+                                      
                 }
                 break;
 
@@ -811,6 +813,7 @@ function OnClickRespuesta(control) {
     $('#respuestaSelectLotes').next('.select2-container').hide();
     $('#respuestaSelectAreas').next('.select2-container').hide();
     $('#respuestaSelectMotivos').next('.select2-container').hide();
+     $('#respuestaNum').hide();
 
     $('#popUpRespuestaFecha .modal-title').text('Guardar respuesta');
     $('#popUpRespuestaFecha .cancelarPopUpRespuestaFecha').text('Cancelar');
@@ -882,6 +885,7 @@ function OnClickRespuesta(control) {
         $('#respuestaSelectLotes').next('.select2-container').hide();
         $('#respuestaSelectAreas').next('.select2-container').hide();
         $('#respuestaSelectMotivos').next('.select2-container').hide();
+         $('#respuestaNum').hide();
 
         $('#respuestaSelectNumerico').val(respuestaAbierta).trigger('change');
 
@@ -906,6 +910,8 @@ function OnClickRespuesta(control) {
         $('#respuestaSelectLotes').next('.select2-container').hide();
         $('#respuestaSelectAreas').next('.select2-container').hide();
         $('#respuestaSelectMotivos').next('.select2-container').hide();
+         $('#respuestaNum').hide();
+
         const texto = respuestaAbierta.split('-')[0].trim();
         let resultado = referencias.find(ref => ref.split('-')[0].trim() === texto)
         $('#respuestaSelectReferencias').val(resultado).prop('disabled', true).trigger('change');
@@ -929,6 +935,8 @@ function OnClickRespuesta(control) {
         $('#respuestaSelectLotes').next('.select2-container').hide();
         $('#respuestaSelectAreas').next('.select2-container').hide();
         $('#respuestaSelectMotivos').next('.select2-container').hide();
+         $('#respuestaNum').hide();
+
         const texto = respuestaAbierta.split('-')[1].trim();
         let resultado = productos.find(ref => ref.split('-')[1].trim() === texto)
         $('#respuestaSelectProductos').val(resultado).prop('disabled', true).trigger('change');
@@ -952,6 +960,7 @@ function OnClickRespuesta(control) {
         $('#respuestaSelectEquipos').next('.select2-container').show();
         $('#respuestaSelectAreas').next('.select2-container').hide();
         $('#respuestaSelectMotivos').next('.select2-container').hide();
+         $('#respuestaNum').hide();
 
         $('#respuestaSelectEquipos').val(respuestaAbierta).trigger('change');
 
@@ -976,6 +985,7 @@ function OnClickRespuesta(control) {
         $('#respuestaSelectLotes').next('.select2-container').show();
         $('#respuestaSelectAreas').next('.select2-container').hide();
         $('#respuestaSelectMotivos').next('.select2-container').hide();
+         $('#respuestaNum').hide();
 
         $('#respuestaSelectLotes').val(respuestaAbierta).trigger('change');
 
@@ -999,6 +1009,7 @@ function OnClickRespuesta(control) {
         $('#respuestaSelectLotes').next('.select2-container').hide();
         $('#respuestaSelectAreas').next('.select2-container').show();
         $('#respuestaSelectMotivos').next('.select2-container').hide();
+        $('#respuestaNum').hide();
 
         $('#respuestaSelectAreas').val(respuestaAbierta).trigger('change');
 
@@ -1021,29 +1032,14 @@ function OnClickRespuesta(control) {
         $('#respuestaSelectEquipos').next('.select2-container').hide();
         $('#respuestaSelectLotes').next('.select2-container').hide();
         $('#respuestaSelectAreas').next('.select2-container').hide();
-        $('#respuestaSelectMotivos').next('.select2-container').show();
+        $('#respuestaSelectMotivos').next('.select2-container').hide();
+        $('#respuestaNum').show();
 
-        const contenedor = control.closest('.contenedosPreguntas');
-
-        const respuesta = contenedor.querySelector('.respuesta');
-        const valorRespuestaAbierta = respuesta.getAttribute('respuestaabierta');
-
-        console.log(valorRespuestaAbierta);
-
-        let area = areas.find(element => (valorRespuestaAbierta == element.nombre));
-        let motivos = [];
-
-        if (area && area.motivos) {
-            motivos = area.motivos;
-        }
-
-        $('#respuestaSelectMotivos').empty().trigger('change');
-
-        motivos.forEach(element => {
-            $('#respuestaSelectMotivos').append(`<option value="${element.nombre}">${element.nombre}</option>`);
-        });
-
-        $('#respuestaSelectMotivos').val(respuestaAbierta).trigger('change');
+        if (respuestaAbierta != 'null')
+            $('#respuestaNum').val(respuestaAbierta);
+        else
+            $('#respuestaNum').val('');  
+                
 
         if ($(control).hasClass('respuestaSeleccionNoPermitido')) {
             $('.guardarRespuestaFecha').hide();
@@ -2108,7 +2104,7 @@ function OnClickFinalizarListaChequeo() {
     let cantidadTotal = $('.contenedorCategorias').find('.contenedorRespuestas').length;
     let cantidadContestadas = $('.contenedorCategorias').find('.respuestaSeleccion').length;
 
-    let velocidad = 500;
+    let velocidad = 500;    
 
     if (cantidadContestadas == 0) {
         $("html, body").animate({
@@ -2118,6 +2114,7 @@ function OnClickFinalizarListaChequeo() {
 
     let scroll = false;
     $.each($('.contenedorCategorias').find('.contenedorRespuestas'), function (indexInArray, item) {
+       
         let respondio = $(item).find('.respuesta').hasClass('respuestaSeleccion');
         if (!respondio && !scroll) {
             //console.log($(item));
@@ -2142,6 +2139,27 @@ function OnClickFinalizarListaChequeo() {
         return;
     }
 
+    respuestasRango = [];
+
+    $.each($('.contenedorCategorias').find('.respuestaSeleccion'), function (i, item) {
+
+        const respuesta = $(item);
+
+        const valormin = respuesta.attr('valormin');
+        const valormax = respuesta.attr('valormax');
+        const respuestaAbierta = respuesta.attr('respuestaabierta');
+        const tiporespuesta = respuesta.attr('tiporespuesta');        
+        const idPregunta = respuesta.parents().eq(4).attr('idPregunta');
+        
+        if (tiporespuesta == 15) {
+            if (Number(respuestaAbierta) < valormin || Number(respuestaAbierta) > valormax) {
+                respuestasRango.push(idPregunta);
+            }
+        }
+    });
+
+    console.log('respuestas fuera de rango:', respuestasRango);
+
 
     let evaluadoId = $('.evaluandoA').val();
     let latitud = localizacion.latitud;
@@ -2165,7 +2183,8 @@ function OnClickFinalizarListaChequeo() {
             estado: estado,
             fechaRealizacion: fechaRealizacion,
             idListaChequeoEjec: idListaChequeoEjec,
-            obsgeneral: obsgeneral
+            obsgeneral: obsgeneral,
+            respuestasRango: respuestasRango
         },
         cache: false,
         dataType: 'json',
@@ -2418,9 +2437,7 @@ function OnClickGuardarRespuestaTiempo() {
                     $(controlGlobal).attr('respuestaAbierta', $('#respuestaTiempoText').val());
                     $('#popUpRespuestaTiempo').modal('hide');
                     toastr.success(data.mensaje);
-                    if (data.datos.recargar) {
-                        window.location.reload();
-                    }
+                    
                     break;
 
                 case 406:
@@ -2500,13 +2517,13 @@ function OnClickGuardarRespuestaFecha() {
 
         objetoEnviarGlobal.respuestaAbierta = $('#respuestaSelectAreas').val();
     } else if (objetoEnviarGlobal.tipoRespuesta == 15) {
-        if ($('#respuestaSelectMotivos').val() == '') {
-            toastr.warning('Debes seleccionar una opción');
-            $('#respuestaSelectMotivos').focus();
+        if ($('#respuestaNum').val() == '') {
+            toastr.warning('Debes ingresar un valor');
+            $('#respuestaNum').focus();
             return;
         }
 
-        objetoEnviarGlobal.respuestaAbierta = $('#respuestaSelectMotivos').val();
+        objetoEnviarGlobal.respuestaAbierta = $('#respuestaNum').val();
     }
     else {
         if ($('#respuestaFechaText').val() == '') {
@@ -2568,7 +2585,7 @@ function OnClickGuardarRespuestaFecha() {
                         });
 
                     } else if (objetoEnviarGlobal.tipoRespuesta == 15) {
-                        $(controlGlobal).attr('respuestaAbierta', $('#respuestaSelectMotivos').val());
+                        $(controlGlobal).attr('respuestaAbierta', $('#respuestaNum').val());
                     }
                     else {
                         $(controlGlobal).attr('respuestaAbierta', $('#respuestaFechaText').val());
@@ -2577,9 +2594,6 @@ function OnClickGuardarRespuestaFecha() {
                     $('#popUpRespuestaFecha').modal('hide');
                     toastr.success(data.mensaje);
 
-                    if (data.datos.recargar) {
-                        window.location.reload();
-                    }
                     break;
 
                 case 406:

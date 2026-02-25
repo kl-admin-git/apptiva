@@ -25,6 +25,7 @@ use App\Http\Models\ListaChequeoModelos;
 use App\Http\Models\CategoriaEtiquetas;
 use App\Http\Models\PlanAccion;
 use App\Http\Models\PlanAccionManual;
+use Illuminate\Support\Facades\DB;
 
 class ListaChequeoMisListasController extends Controller
 {
@@ -1183,6 +1184,17 @@ class ListaChequeoMisListasController extends Controller
                             'pregunta_id' => $idPregunta
                         ]);
                         $respuesta->save();
+
+
+                        if ($IdtipoRespuesta == 15) {
+                            DB::table('rangos_pregunta')->where('id_pregunta',$idPregunta)->delete();
+
+                            DB::table('rangos_pregunta')->insert([
+                                'id_pregunta' => $idPregunta,
+                                'valor_min'    => $itemPersonalizado->valorMin,
+                                'valor_max' => $itemPersonalizado->valorMax,
+                            ]);
+                        }
                     }
                     
                 }
@@ -1414,6 +1426,7 @@ class ListaChequeoMisListasController extends Controller
                     }
                     else
                     {
+                        DB::table('respuesta')->where('pregunta_id',$idPregunta)->delete(); 
                         $respuesta = new $this->respuesta;
                         $respuesta->fill(
                         [
@@ -1423,6 +1436,16 @@ class ListaChequeoMisListasController extends Controller
                             'pregunta_id' => $idPregunta
                         ]);
                         $respuesta->save();
+
+                        if ($IdtipoRespuesta == 15) {
+                            DB::table('rangos_pregunta')->where('id_pregunta',$idPregunta)->delete();
+
+                            DB::table('rangos_pregunta')->insert([
+                                'id_pregunta' => $idPregunta,
+                                'valor_min'    => $itemPersonalizado->valorMin,
+                                'valor_max' => $itemPersonalizado->valorMax,
+                            ]);
+                        }
                     }
                     
                     

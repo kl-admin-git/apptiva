@@ -254,6 +254,34 @@ $(document).ready(function () {
                                 toastr.warning("Tienes 2 respuestas que tienen el mismo nombre");
                                 return false;
                             }
+                        } else if(idRespuestaPonPredeterminada == 15){
+                            let hijosContenedorMultiple = $('.cuerpoConfiguracionRespuesas').find(".row");
+
+                            let vaciosTexto = false;
+
+                            $.each(hijosContenedorMultiple, function (indexInArray, itemHijo) {
+                                let valorPersonalizadoMin = $(itemHijo).find('.valorPersonalizadoMin').val();
+                                let valorPersonalizadoMax = $(itemHijo).find('.valorPersonalizadoMax').val();
+
+                                if (valorPersonalizadoMin == "" || valorPersonalizadoMax == "") {
+                                    vaciosTexto = true;
+                                }else{                                    
+                                    steps.stepsEnviar.stepTres.personalizadas.push(
+                                        {
+                                            idPredeterminado: 15,
+                                            valorPersonalizado: "NÚMERICO",
+                                            valorPredeterminado: "NÚMERICO",
+                                            valorMin: valorPersonalizadoMin,
+                                            valorMax: valorPersonalizadoMax
+                                        });
+                                }
+                            });
+
+
+                            if (vaciosTexto) {
+                                toastr.warning("No debe haber campos vacíos en los campos minimo y maximo");
+                                return false;
+                            }
                         }
                         else
                         {
@@ -402,9 +430,7 @@ $(document).ready(function () {
                 steps.stepsEnviar.stepCuatro.aplicaPlanAccion = false;
                 steps.stepsEnviar.stepCuatro.idRespuesta = 0;
                 steps.stepsEnviar.stepCuatro.planDeAccion = '';
-            }
-
-
+            }            
 
             let modo = $('#crearPreguntaPopUp').attr('editando');
             if (modo != 1) {
@@ -927,27 +953,25 @@ function ComponenteOpcionesDeRespuesta(idOpcionRespuesta, icono, nombre) {
     return string;
 }
 
-function ComponentePersonalizacion(respuestas,tipoRespuesta = 0) {
+function ComponentePersonalizacion(respuestas, tipoRespuesta = 0) {
     let string = '';
 
-    if(tipoRespuesta == 4) //TIPO RESPUESTA MULTIPLE (M)
+    if (tipoRespuesta == 4) //TIPO RESPUESTA MULTIPLE (M)
     {
         let stringRespuestas = "";
         let contador = 0;
-        $.each(respuestas, function (indexInArray, rta) 
-        { 
-            if(contador == 0)
-            {
-                stringRespuestas += ComponenteRespuestaMultiple(rta,1,true); //IRREMOVIBLE ITEM
+        $.each(respuestas, function (indexInArray, rta) {
+            if (contador == 0) {
+                stringRespuestas += ComponenteRespuestaMultiple(rta, 1, true); //IRREMOVIBLE ITEM
                 contador = contador + 1;
             }
             else
-                stringRespuestas += ComponenteRespuestaMultiple(rta,2,true); //NORMAL ITEM
-        });               
+                stringRespuestas += ComponenteRespuestaMultiple(rta, 2, true); //NORMAL ITEM
+        });
 
         string += `<div class="form-group">
                         <div class="cuerpoConfiguracionRespuesas">
-                            ${ stringRespuestas }
+                            ${stringRespuestas}
                         </div>
 
                         <div class="col-lg-12 text-center">
@@ -955,14 +979,34 @@ function ComponentePersonalizacion(respuestas,tipoRespuesta = 0) {
                         </div>
                     </div>`;
     }
-    else
+    if (tipoRespuesta == 15) //TIPO RANGO
     {
-        $.each(respuestas, function (indexInArray, rta) 
-        {
+        let stringRespuestas = "";
+        let contador = 0;
+        
+        stringRespuestas =`<div class="row mt-1">
+                                <label class="col-lg-5 col-form-label" style="text-align:end;">Valor Minimo</label>
+                                <div class="col-lg-3">
+                                    <input type="number" class="form-control valorPersonalizadoMax" value=""/>
+                                </div>
+                                <label class="col-lg-5 col-form-label" style="text-align:end;">Valor Maximo</label>
+                                <div class="col-lg-3">
+                                    <input type="number" class="form-control valorPersonalizadoMin"/>
+                                </div>
+                            </div>`;
+
+        string += `<div class="form-group">
+                        <div class="cuerpoConfiguracionRespuesas">
+                            ${stringRespuestas}
+                        </div>                        
+                    </div>`;
+    }
+    else {
+        $.each(respuestas, function (indexInArray, rta) {
             string += ValidarTipoDeString(rta);
         });
     }
-   
+
 
     return string;
 
