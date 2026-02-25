@@ -1012,6 +1012,7 @@ class ListaChequeoEjecucionController extends Controller
         $this->FuncionEnvioDeCorreoListaTerminada($idListaChequeoEjec);
         $this->FuncionEnvioDeCorreoRespuestasRango($request->respuestasRango, $idListaChequeoEjec);
 
+        
        
         return $this->FinalizarRetorno(
             206,
