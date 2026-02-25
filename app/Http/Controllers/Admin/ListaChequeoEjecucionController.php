@@ -30,6 +30,7 @@ use App\Http\Models\PlanAccionManuDetalle;
 
 use Carbon\Carbon;
 use App\Mail\MailFinalizarListaChequeo;
+use App\Mail\MailRangoListaChequeo;
 use App\Mail\MailResponsablesPlanAccionManual;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -97,7 +98,7 @@ class ListaChequeoEjecucionController extends Controller
 
     public function Index()
     {
-        $fechaActual = date('d-m-Y');
+        $fechaActual = date('d-m-Y H:i:s');
 
         $idListaEjecutada = \Request::segment(4);
         if (!$this->listaEjecutada->where('id', '=', $idListaEjecutada)->exists())
@@ -503,8 +504,12 @@ class ListaChequeoEjecucionController extends Controller
                 ->select(
                     'pregunta.*',
                     'trc.nombre AS NOMBRE_CATEGORIA',
-                    'tr.icono AS ICONO_TIPO_RESPUESTA'
-                )->where('pregunta.categoria_id', '=', $categoria->id)
+                    'tr.icono AS ICONO_TIPO_RESPUESTA',
+                    'rangos_pregunta.valor_min',
+                    'rangos_pregunta.valor_max'
+                )
+                ->leftjoin('rangos_pregunta', 'rangos_pregunta.id_pregunta', 'pregunta.id')
+                ->where('pregunta.categoria_id', '=', $categoria->id)
                 ->orderBy('pregunta.orden_lista', 'ASC')
                 ->get();
 
@@ -978,7 +983,7 @@ class ListaChequeoEjecucionController extends Controller
     }
 
     public function FinalizarListaChequeo(Request $request)
-    {
+    {        
         $evaluadoId = $request->get('evaluadoId');
         $latitud = $request->get('latitud');
         $longitud = $request->get('longitud');
@@ -1005,11 +1010,72 @@ class ListaChequeoEjecucionController extends Controller
         $respuestaUpdate = $this->listaEjecutada->where('id', '=', $idListaChequeoEjec)->update($arrayActualizar);
 
         $this->FuncionEnvioDeCorreoListaTerminada($idListaChequeoEjec);
+        $this->FuncionEnvioDeCorreoRespuestasRango($request->respuestasRango, $idListaChequeoEjec);
 
+       
         return $this->FinalizarRetorno(
             206,
             $this->MensajeRetorno('', 206, 'Lista de chequeo finalizada')
         );
+    }
+
+    public function FuncionEnvioDeCorreoRespuestasRango($ids, $idListaChequeoEjec)
+    {
+        $data = DB::table('lista_chequeo_ejec_respuestas as lcer')
+            ->select(
+                'p.nombre as pregunta',
+                'c.nombre as categoria',
+                'rp.valor_min',
+                'rp.valor_max',
+                'lcer.respuesta_abierta as respuesta'
+            )
+            ->leftJoin('categoria AS c', 'lcer.categoria_id', '=', 'c.id')
+            ->leftJoin('pregunta AS p', 'lcer.pregunta_id', '=', 'p.id')
+            ->leftjoin('rangos_pregunta as rp', 'lcer.pregunta_id', '=', 'rp.id_pregunta')
+            ->whereIn('lcer.pregunta_id', $ids)
+            ->where('lcer.lista_chequeo_ejec_id', $idListaChequeoEjec)
+            ->get();
+            
+            $listaDeChequeo = $this->listaEjecutada
+            ->select(
+                'lista_chequeo_ejecutadas.*',
+                'u.nombre_completo AS NOMBRE_USUARIO'
+            )
+            ->Join('usuario AS u', 'u.id', '=', 'lista_chequeo_ejecutadas.usuario_id')
+            ->where('lista_chequeo_ejecutadas.id', '=', $idListaChequeoEjec)->first();
+
+        $arrayCorreos = [];
+        //ENVIAR CORREO A ÉL MISMO
+        array_push($arrayCorreos, auth()->user()->correo);
+
+        //ENVIAR CORREO AL ADMINISTRADOR
+        $cuentaPrincipal = $this->cuentaPrincipal->where('id', '=', auth()->user()->cuenta_principal_id)->first();
+        array_push($arrayCorreos, $cuentaPrincipal->correo_electronico);
+
+        //ENVIAR CORREO A RESPONSABLE EMPRESA
+        $idUsuarioResponsable = $this->listaEjecutada
+            ->select(
+                'em.usuario_id AS ID_USUARIO_EMPRESA',
+                'e.usuario_id AS ID_USUARIO_ESTABLECIMIENTO'
+            )
+            ->Join('usuario AS u', 'u.id', '=', 'lista_chequeo_ejecutadas.usuario_id')
+            ->Join('establecimiento AS e', 'e.id', '=', 'u.establecimiento_id')
+            ->Join('empresa AS em', 'em.id', '=', 'e.empresa_id')
+            ->where('lista_chequeo_ejecutadas.id', '=', $idListaChequeoEjec)->first();
+
+        if (!is_null($idUsuarioResponsable->ID_USUARIO_EMPRESA)) {
+            // SI EXISTE RESPONSABLE EMPRESA
+            $usuarioResponsableEmpresa = $this->usuario->where('id', '=', $idUsuarioResponsable->ID_USUARIO_EMPRESA)->first();
+            array_push($arrayCorreos, $usuarioResponsableEmpresa->correo);
+        }
+
+        if (!is_null($idUsuarioResponsable->ID_USUARIO_ESTABLECIMIENTO)) {
+            // SI EXISTE RESPONSABLE ESTABLECIMIENTO
+            $usuarioResponsableEmpresa = $this->usuario->where('id', '=', $idUsuarioResponsable->ID_USUARIO_ESTABLECIMIENTO)->first();
+            array_push($arrayCorreos, $usuarioResponsableEmpresa->correo);
+        }
+
+        \Mail::to($arrayCorreos)->send(new MailRangoListaChequeo($data, $listaDeChequeo));           
     }
 
     public function FuncionEnvioDeCorreoListaTerminada($idListaChequeoEjec)

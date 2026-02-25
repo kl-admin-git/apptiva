@@ -236,7 +236,7 @@ class ListasChequeoEjecutadasController extends Controller
             'lc.nombre AS NOMBRE_LISTA_CHEQUEO',
             'u.nombre_completo AS NOMBRE_USUARIO_EJECUTO',
             'lista_chequeo_ejecutadas.*',
-            \DB::raw('DATE_FORMAT(lista_chequeo_ejecutadas.fecha_realizacion,"%d de %M %Y") AS FECHA_EJECUCION'),
+            \DB::raw('DATE_FORMAT(lista_chequeo_ejecutadas.fecha_realizacion,"%d de %M %Y %h:%i %p") AS FECHA_EJECUCION'),
             \DB::raw('
             IF(lista_chequeo_ejecutadas.evaluado_id IS NULL,"Sin Asignar",
                 (CASE    
@@ -627,7 +627,7 @@ class ListasChequeoEjecutadasController extends Controller
                      WHEN lc.publicacion_destino = 3 THEN 'Organización y clientes'
                 END
             ) AS PUBLICADO_EN"),
-            \DB::raw("DATE_FORMAT(lista_chequeo_ejecutadas.fecha_realizacion,'%d %M %Y') AS FECHA_REALIZACION"),
+            \DB::raw("DATE_FORMAT(lista_chequeo_ejecutadas.fecha_realizacion,'%d %M %Y %h:%i %p') AS FECHA_REALIZACION"),
             \DB::raw('IF(lista_chequeo_ejecutadas.evaluado_id IS NULL,"Sin Asignar",
                     (CASE    
                         WHEN lc.entidad_evaluada = 1 THEN (SELECT nombre FROM empresa WHERE id=lista_chequeo_ejecutadas.evaluado_id)
