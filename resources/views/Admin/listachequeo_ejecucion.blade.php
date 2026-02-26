@@ -314,7 +314,7 @@
                                 <div class="card-body">
                                     <div class="">
                                         <input id="respuestaFechaText" class="form-control" placeholder="0000-00-00" type="date"/>
-                                        <input id="respuestaNum" class="form-control" type="number"/>
+                                        <input id="respuestaNum" class="form-control input-number" type="text"/>
                                         <select name="respuestaSelectEquipos" id="respuestaSelectEquipos"
                                             class="form-control select2 ">
 

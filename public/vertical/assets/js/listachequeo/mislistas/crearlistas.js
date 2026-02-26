@@ -27,6 +27,7 @@ let steps =
 };
 
 $(document).ready(function () {
+
     let formulario = $('#formularioEditarListaChequeo').parsley();
     formulario.options.requiredMessage = "Este campo es requerido";
     let formularioCategoria = $('#formularioCrearCategoria').parsley();
@@ -987,11 +988,11 @@ function ComponentePersonalizacion(respuestas, tipoRespuesta = 0) {
         stringRespuestas =`<div class="row mt-1">
                                 <label class="col-lg-5 col-form-label" style="text-align:end;">Valor Minimo</label>
                                 <div class="col-lg-3">
-                                    <input type="number" class="form-control valorPersonalizadoMax" value=""/>
+                                    <input type="text" class="form-control valorPersonalizadoMax input-number" value=""/>
                                 </div>
                                 <label class="col-lg-5 col-form-label" style="text-align:end;">Valor Maximo</label>
                                 <div class="col-lg-3">
-                                    <input type="number" class="form-control valorPersonalizadoMin"/>
+                                    <input type="text" class="form-control valorPersonalizadoMin input-number"/>
                                 </div>
                             </div>`;
 
@@ -2365,3 +2366,7 @@ $('.confirmar').on('click', ConfimarBoton);
 $('.crearEtiqueta').on('click', OnClickTraerEtiquetas);
 $('.cancelarPopUpCreacionEtiqueta').on('click', OnClickCancelarCreacionEtiqueta);
 $('.crearAccionEtiqueta').on('click', OnClickAgregarEtiqueta);
+
+$(document).on('input', '.input-number', function () {
+    this.value = this.value.replace(/[^0-9]/g, '');
+});
