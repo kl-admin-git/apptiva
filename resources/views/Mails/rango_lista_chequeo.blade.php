@@ -64,10 +64,12 @@
                                                         <td class="content-block"
                                                             style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0; padding: 0 0 20px;"
                                                             valign="top">
-                                                            <p>Se ha realizado una la lista de chequeo de
-                                                                <b>{{ $nombre }}</b> donde se encontraron
-                                                                las siguientes respuestas donde no cumplia con el valor
-                                                                mínimo y máximo especificado para la pregunta:
+                                                            <p>
+                                                                Se ha completado la lista de chequeo de
+                                                                <b>{{ $nombre }}</b>, en la cual se identificaron
+                                                                las siguientes respuestas
+                                                                que no cumplen con los valores mínimos y máximos
+                                                                establecidos para cada pregunta:
                                                             </p>
                                                         </td>
                                                     </tr>
