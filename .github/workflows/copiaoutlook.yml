@@ -36,7 +36,7 @@ jobs:
           ACCESS_TOKEN=$(echo $TOKEN_RESPONSE | jq -r '.access_token')
 
           # Ruta dentro de OneDrive (sin parentesis para evitar errores en URL)
-          TARGET_PATH="Backups%28AWS%29/repos/$REPO_NAME.zip"
+          TARGET_PATH="Backups%28AWS%29/repositorios/$REPO_NAME.zip"
 
           echo "Subiendo $REPO_NAME.zip a la ruta: $TARGET_PATH..."
 
