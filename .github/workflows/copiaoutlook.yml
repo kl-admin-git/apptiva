@@ -1,0 +1,58 @@
+name: copia de archivo a outlook
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  envio-zip:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar codigo del repo
+        uses: actions/checkout@v4
+
+      - name: Crear archivo ZIP
+        run: |
+          zip -r ${{ github.event.repository.name }}.zip . -x "*.git*"
+
+      - name: Subir ZIP a la carpeta de OneDrive via Microsoft Graph API
+        env:
+          AZURE_TENANT_ID: ${{ secrets.TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          AZURE_USER_EMAIL: ${{ secrets.USER_EMAIL }}
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          # 1. Obtener Token de acceso desde Azure Active Directory
+          TOKEN_RESPONSE=$(curl -s -X POST "https://login.microsoftonline.com/$AZURE_TENANT_ID/oauth2/v2.0/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "client_id=$AZURE_CLIENT_ID" \
+            -d "scope=https://graph.microsoft.com/.default" \
+            -d "client_secret=$AZURE_CLIENT_SECRET" \
+            -d "grant_type=client_credentials")
+
+          ACCESS_TOKEN=$(echo $TOKEN_RESPONSE | jq -r '.access_token')
+
+          # Ruta dentro de OneDrive (sin parentesis para evitar errores en URL)
+          TARGET_PATH="Backups%28AWS%29/repos/$REPO_NAME.zip"
+
+          echo "Subiendo $REPO_NAME.zip a la ruta: $TARGET_PATH..."
+
+          # 2. Subir el archivo ZIP mediante la API de Microsoft Graph
+          RESPONSE=$(curl -s -X PUT \
+            "https://graph.microsoft.com/v1.0/users/$AZURE_USER_EMAIL/drive/root:/$TARGET_PATH:/content" \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H "Content-Type: application/zip" \
+            --data-binary "@$REPO_NAME.zip")
+
+          # 3. Validar si la carga fue exitosa
+          FILE_ID=$(echo $RESPONSE | jq -r '.id')
+          if [ "$FILE_ID" != "null" ] && [ -n "$FILE_ID" ]; then
+            echo "¡Archivo subido exitosamente a OneDrive! ID: $FILE_ID"
+          else
+            echo "Error al subir el archivo:"
+            echo "$RESPONSE"
+            exit 1
+          fi
