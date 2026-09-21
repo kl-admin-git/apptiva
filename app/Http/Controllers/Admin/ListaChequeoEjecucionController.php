@@ -1011,7 +1011,7 @@ class ListaChequeoEjecucionController extends Controller
 
         $this->FuncionEnvioDeCorreoListaTerminada($idListaChequeoEjec);        
 
-        if(auth()->user()->cuenta_principal_id == 147)
+        if(auth()->user()->cuenta_principal_id == 147  || auth()->user()->cuenta_principal_id == 148)
         {
             if ($request->respuestasRango != null) {
                 $this->FuncionEnvioDeCorreoRespuestasRango($request->respuestasRango, $idListaChequeoEjec);
@@ -1049,13 +1049,22 @@ class ListaChequeoEjecucionController extends Controller
             ->Join('usuario AS u', 'u.id', '=', 'lista_chequeo_ejecutadas.usuario_id')
             ->where('lista_chequeo_ejecutadas.id', '=', $idListaChequeoEjec)->first();
 
+          
         $arrayCorreos = [];
-        //ENVIAR CORREO A ÉL MISMO
-        array_push($arrayCorreos, auth()->user()->correo);
 
-        //ENVIAR CORREO AL ADMINISTRADOR
-        $cuentaPrincipal = $this->cuentaPrincipal->where('id', '=', auth()->user()->cuenta_principal_id)->first();
-        array_push($arrayCorreos, $cuentaPrincipal->correo_electronico);
+        if (auth()->user()->cuenta_principal_id == 148) {
+            # code...
+            $correosAdmini =  $this->usuario->select('correo')->where('cuenta_principal_id','=',auth()->user()->cuenta_principal_id)->where('perfil_id','=','1')->get();
+            foreach ($correosAdmini as $key => $value) {
+                array_push($arrayCorreos, $value->correo);
+            }
+        }else{
+            //ENVIAR CORREO A ÉL MISMO
+            array_push($arrayCorreos, auth()->user()->correo);
+            //ENVIAR CORREO AL ADMINISTRADOR
+            $cuentaPrincipal = $this->cuentaPrincipal->where('id', '=', auth()->user()->cuenta_principal_id)->first();
+            array_push($arrayCorreos, $cuentaPrincipal->correo_electronico);
+        }
 
         //ENVIAR CORREO A RESPONSABLE EMPRESA
         $idUsuarioResponsable = $this->listaEjecutada
@@ -1094,12 +1103,19 @@ class ListaChequeoEjecucionController extends Controller
             ->where('lista_chequeo_ejecutadas.id', '=', $idListaChequeoEjec)->first();
 
         $arrayCorreos = [];
-        //ENVIAR CORREO A ÉL MISMO
-        array_push($arrayCorreos, auth()->user()->correo);
-
-        //ENVIAR CORREO AL ADMINISTRADOR
-        $cuentaPrincipal = $this->cuentaPrincipal->where('id', '=', auth()->user()->cuenta_principal_id)->first();
-        array_push($arrayCorreos, $cuentaPrincipal->correo_electronico);
+       if (auth()->user()->cuenta_principal_id == 148) {
+            # code...
+            $correosAdmini =  $this->usuario->select('correo')->where('cuenta_principal_id','=',auth()->user()->cuenta_principal_id)->where('perfil_id','=','1')->get();
+            foreach ($correosAdmini as $key => $value) {
+                array_push($arrayCorreos, $value->correo);
+            }
+        }else{
+            //ENVIAR CORREO A ÉL MISMO
+            array_push($arrayCorreos, auth()->user()->correo);
+            //ENVIAR CORREO AL ADMINISTRADOR
+            $cuentaPrincipal = $this->cuentaPrincipal->where('id', '=', auth()->user()->cuenta_principal_id)->first();
+            array_push($arrayCorreos, $cuentaPrincipal->correo_electronico);
+        }
 
         //ENVIAR CORREO A RESPONSABLE EMPRESA
         $idUsuarioResponsable = $this->listaEjecutada
