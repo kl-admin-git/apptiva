@@ -1,0 +1,67 @@
+services:
+  app-php82:
+    build:
+      context: .
+      dockerfile: Dockerfile.php82
+    image: apptiva-app:php82
+    container_name: apptiva_app_php82
+    working_dir: /var/www/audiid_gl
+    ports:
+      - "9003:80"
+    depends_on:
+      - db-local
+    environment:
+      APP_NAME: Laravel
+      APP_ENV: local
+      APP_KEY: base64:c0XNCmy4scUAe9Jp90jpJCflN4ub0zff/JR0jQvzMDk=
+      APP_DEBUG: 'true'
+      APP_URL: http://localhost:9003
+      LOG_CHANNEL: stack
+      DB_CONNECTION: mysql
+      DB_HOST: db-local
+      DB_PORT: 3306
+      DB_DATABASE: apptiva_db
+      DB_USERNAME: apptiva_user
+      DB_PASSWORD: apptiva_password
+      BROADCAST_DRIVER: log
+      CACHE_DRIVER: file
+      QUEUE_CONNECTION: sync
+      SESSION_DRIVER: file
+      SESSION_LIFETIME: 120
+      REDIS_HOST: 127.0.0.1
+      REDIS_PASSWORD: null
+      REDIS_PORT: 6379
+      MAIL_MAILER: smtp
+      MAIL_HOST: smtp.ethereal.email
+      MAIL_PORT: 587
+      MAIL_USERNAME: hermann.reichel@ethereal.email
+      MAIL_PASSWORD: VjYXKypKPYP9jzg9yf
+      MAIL_ENCRYPTION: tls
+    volumes:
+      # Opcional: montar storage y public para persistir imágenes subidas durante pruebas
+      - app_storage:/var/www/audiid_gl/storage
+    networks:
+      - apptiva-net
+
+  db-local:
+    image: mysql:8.0
+    container_name: apptiva_db_local
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: apptiva_db
+      MYSQL_USER: apptiva_user
+      MYSQL_PASSWORD: apptiva_password
+    ports:
+      - "3368:3306"
+    volumes:
+      - db_data_local:/var/lib/mysql
+    networks:
+      - apptiva-net
+
+volumes:
+  db_data_local:
+  app_storage:
+
+networks:
+  apptiva-net:
+    driver: bridge
