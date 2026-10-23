@@ -44,7 +44,9 @@ class ListasChequeoEjecutadasController extends Controller
         $this->ejecutadasAdjuntos = $ejecutadasAdjuntos;
         $this->planAccionManualDetalle = $planAccionManualDetalle;
 
-        \DB::statement("SET lc_time_names = 'es_ES'");
+        try {
+            \DB::statement("SET lc_time_names = 'es_ES'");
+        } catch (\Throwable $e) {}
         $this->middleware('auth');
         $this->middleware('isActive');
     }
@@ -660,7 +662,7 @@ class ListasChequeoEjecutadasController extends Controller
 
     public function FuncionConsultaCategoriaPreguntasSeccionDos($idListaEjecutada)
     {
-        $consultaResultadoFinal = \DB::select(\DB::raw("SELECT
+        $consultaResultadoFinal = \DB::select("SELECT
         lcer.categoria_id,
         cat.nombre as categoria,
         lcer.no_aplica,
@@ -676,11 +678,11 @@ class ListasChequeoEjecutadasController extends Controller
         INNER JOIN pregunta pre ON pre.id=lcer.pregunta_id
         INNER JOIN categoria cat ON cat.id=pre.categoria_id
         WHERE  lcer.lista_chequeo_ejec_id=:idEjecutada
-        ORDER BY cat.id;"),['idEjecutada' => $idListaEjecutada]);
+        ORDER BY cat.id;",['idEjecutada' => $idListaEjecutada]);
         
         $suma = (COUNT($consultaResultadoFinal)== 0 ? 0 : $consultaResultadoFinal[0]->res_final);
 
-        $seccionDos = \DB::select(\DB::raw("SELECT
+        $seccionDos = \DB::select("SELECT
         lcer.categoria_id,
         cat.nombre as categoria,
         lcer.no_aplica,
@@ -697,7 +699,7 @@ class ListasChequeoEjecutadasController extends Controller
         INNER JOIN categoria cat ON cat.id=pre.categoria_id
         WHERE  lcer.lista_chequeo_ejec_id=:idEjecutada
         GROUP BY cat.id
-        ORDER BY cat.id;"),['idEjecutada' => $idListaEjecutada]);
+        ORDER BY cat.id;",['idEjecutada' => $idListaEjecutada]);
         
         $arrayFinal = array
         (
@@ -711,7 +713,7 @@ class ListasChequeoEjecutadasController extends Controller
     
     public function FuncionConsultaCategoriaPreguntasSeccionTres($idListaEjecutada)
     {
-        // $seccionTres = \DB::select(\DB::raw("SELECT 
+        // $seccionTres = \DB::select("SELECT 
         // p.id AS ID_PREGUNTA,
         // c.id AS ID_CATEGORIA,
         // c.nombre AS NOMBRE_CATEGORIA,
@@ -737,9 +739,9 @@ class ListasChequeoEjecutadasController extends Controller
         // LEFT JOIN lista_chequeo_ejec_opciones AS lceo ON lceo.lista_chequeo_ejec_respuestas_id=r.id
         // WHERE lce.estado = :idEstado 
         // AND lce.id = :idEjecutada 
-        // ORDER BY p.orden_lista ASC"),['idEstado' => 2, 'idEjecutada' => $idListaEjecutada]);
+        // ORDER BY p.orden_lista ASC",['idEstado' => 2, 'idEjecutada' => $idListaEjecutada]);
 
-         $seccionTres = \DB::select(\DB::raw("SELECT 
+         $seccionTres = \DB::select("SELECT 
          pre.id AS ID_PREGUNTA,
          cat.id AS ID_CATEGORIA,
          cat.nombre as NOMBRE_CATEGORIA, 
@@ -797,7 +799,7 @@ class ListasChequeoEjecutadasController extends Controller
          LEFT JOIN lista_chequeo_ejec_opciones AS lceo ON lceo.lista_chequeo_ejec_respuestas_id=lcer.id
          WHERE lce.id=:idEjecutada AND lce.estado = :idEstado
          GROUP BY cat.id, pre.id
-         ORDER BY pre.orden_lista"),['idEstado' => 2, 'idEjecutada' => $idListaEjecutada]);
+         ORDER BY pre.orden_lista",['idEstado' => 2, 'idEjecutada' => $idListaEjecutada]);
 
         foreach ($seccionTres as $key => $itemPregunta) 
         {
@@ -849,7 +851,7 @@ class ListasChequeoEjecutadasController extends Controller
 
     public function FuncionConsultaCategoriaPreguntasSeccionCuatro($idListaEjecutada)
     {
-        $seccionCuatro = \DB::select(\DB::raw("SELECT
+        $seccionCuatro = \DB::select("SELECT
         lcer.no_aplica, 
         IF(res.valor_personalizado IS NULL, 'No aplica',res.valor_personalizado) as respuesta, 
         count(*) as cant,
@@ -861,14 +863,14 @@ class ListasChequeoEjecutadasController extends Controller
         LEFT JOIN pregunta pre ON pre.id=lcer.pregunta_id
         LEFT JOIN lista_chequeo lc ON lc.id=lce.lista_chequeo_id
         WHERE lce.id=:idEjecutada
-        GROUP BY respuesta"),['idEjecutada' => $idListaEjecutada]);
+        GROUP BY respuesta",['idEjecutada' => $idListaEjecutada]);
 
         return $seccionCuatro;
     }
 
     public function FuncionConsultaCategoriaPreguntasSeccionQuinta($idListaEjecutada)
     {
-        $seccionQuinta = \DB::select(\DB::raw("SELECT 
+        $seccionQuinta = \DB::select("SELECT 
         pre.nombre as pregunta,
         IF(res.valor_personalizado IS NULL, 'No aplica',res.valor_personalizado) as respuesta, 
         paa.plan_accion_descripcion as plan_accion,
@@ -907,7 +909,7 @@ class ListasChequeoEjecutadasController extends Controller
         LEFT JOIN plan_accion pa ON pa.respuesta_id=res.id
         INNER JOIN plan_accion_automatico paa ON paa.plan_accion_id=pa.id
         WHERE lce.id=:idEjecutada
-        GROUP BY cat.id, pre.id"),['idEjecutada' => $idListaEjecutada]);
+        GROUP BY cat.id, pre.id",['idEjecutada' => $idListaEjecutada]);
         //dd($seccionQuinta);
         return $seccionQuinta;
     }
@@ -992,7 +994,7 @@ class ListasChequeoEjecutadasController extends Controller
     public function traer_data_plan_accion_manual(Request $request){
         $idpregunta = $request->idpregunta;
         //dd($request->idlistachequeo);
-        $planAccionM = \DB::select(\DB::raw("
+        $planAccionM = \DB::select("
         SELECT pamd.plan_accio_man_opc_id as id_opcion, pamo.opcion as opcion, 
         IF((pamd.plan_accio_man_opc_id = 8 OR pamd.plan_accio_man_opc_id = 5),
             (SELECT uss.nombre_completo FROM usuario AS uss WHERE uss.id=pamd.respuesta),
@@ -1002,7 +1004,7 @@ class ListasChequeoEjecutadasController extends Controller
         JOIN lista_chequeo_ejec_respuestas lcer ON pamd.lista_cheq_ejec_respuesta_id = lcer.id
         INNER JOIN plan_accion_man_opc pamo ON pamd.plan_accio_man_opc_id = pamo.id 
         WHERE lcer.pregunta_id =:idpregunta AND lcer.lista_chequeo_ejec_id =:idlistaejec;
-        "), ['idpregunta' => $idpregunta, 'idlistaejec' => $request->idlistachequeo]);
+        ", ['idpregunta' => $idpregunta, 'idlistaejec' => $request->idlistachequeo]);
 
         return response()->json([
             'data' => $planAccionM
