@@ -12,7 +12,7 @@ env:
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
       packages: write
@@ -70,7 +70,9 @@ jobs:
           fi
 
           cd "$TARGET_DIR"
-          if [ -f "docker-compose.prod.yml" ]; then
+          if [ -f "docker-compose-prd.yml" ]; then
+            docker compose -f docker-compose-prd.yml up -d --no-deps ad-original
+          elif [ -f "docker-compose.prod.yml" ]; then
             docker compose -f docker-compose.prod.yml up -d --no-deps ad-original
           else
             docker compose up -d --no-deps ad-original
