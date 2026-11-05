@@ -55,3 +55,23 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      
+      - name: Deploy Container Locally
+        run: |
+          TARGET_DIR="${{ secrets.SERVER_PROJECT_PATH }}"
+          if [ -z "$TARGET_DIR" ]; then
+            TARGET_DIR="/home/usrcustomer/projects/audeed-global-mercadeo"
+          fi
+
+          if [ ! -d "$TARGET_DIR" ]; then
+            echo "❌ La carpeta $TARGET_DIR no existe en el servidor."
+            echo "Asegúrate de verificar la ruta en el servidor o definir SERVER_PROJECT_PATH en GitHub Secrets."
+            exit 1
+          fi
+
+          cd "$TARGET_DIR"
+          if [ -f "docker-compose.prod.yml" ]; then
+            docker compose -f docker-compose.prod.yml up -d --no-deps ad-original
+          else
+            docker compose up -d --no-deps ad-original
+          fi
