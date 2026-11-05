@@ -667,7 +667,7 @@ class AdministracionEmpresasController extends Controller
     public function FuncionValidarSiPuedeCrearEmpresa()
     {
 
-        $puedeEjecutar = \DB::select(\DB::raw("SELECT
+        $puedeEjecutar = \DB::select("SELECT
         (CASE
             WHEN pl.id=1 THEN '1'
             WHEN pl.id=2 THEN '2'
@@ -700,7 +700,7 @@ class AdministracionEmpresasController extends Controller
         FROM empresa em
         INNER JOIN cuenta_principal cp ON cp.id=em.cuenta_principal_id
         INNER JOIN plan pl ON pl.id=cp.plan_id
-        WHERE em.cuenta_principal_id=:idCuentaPrincipal;"),['idCuentaPrincipal' => auth()->user()->cuenta_principal_id]);
+        WHERE em.cuenta_principal_id=:idCuentaPrincipal;",['idCuentaPrincipal' => auth()->user()->cuenta_principal_id]);
 
         if(ISSET($puedeEjecutar))
         {
@@ -722,7 +722,7 @@ class AdministracionEmpresasController extends Controller
     public function FuncionValidarSiEstaAlDia()
     {
 
-        $puedeEjecutar = \DB::select(\DB::raw("SELECT
+        $puedeEjecutar = \DB::select("SELECT
         pp.id,
         date(NOW()) AS hoy,
         pp.fecha_inicio,
@@ -731,7 +731,7 @@ class AdministracionEmpresasController extends Controller
         FROM plan_pagos pp
         INNER JOIN cuenta_principal cp ON cp.id=pp.cuenta_principal_id
         WHERE cp.id=:idCuentaPrincipal
-        ORDER BY pp.id DESC limit 1;"),['idCuentaPrincipal' => auth()->user()->cuenta_principal_id]);
+        ORDER BY pp.id DESC limit 1;",['idCuentaPrincipal' => auth()->user()->cuenta_principal_id]);
 
         if(ISSET($puedeEjecutar))
         {

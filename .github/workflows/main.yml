@@ -1,19 +1,77 @@
-name: PHP + Docker + DB
+name: Build y Publicar Imagen Docker en GitHub Packages (GHCR)
 
 on:
+  workflow_dispatch:
   push:
-    branches: [ "main" ]
+    branches:
+      - 'main'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  update-repo:
-    runs-on: self-hosted
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
     steps:
-      # Accede al contenedor y actualiza el repositorio
-      - name: Acceso al contenedor y pull
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Docker QEMU (para soporte multi-arquitectura si se requiere)
+        uses: docker/setup-qemu-action@v3
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Iniciar sesión en GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extraer metadatos para Docker (tags y etiquetas)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=php82,enable=${{ github.ref == 'refs/heads/upgrade-laravel-php82' }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=sha,format=short
+
+      - name: Construir y publicar imagen Docker
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          platforms: linux/amd64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Deploy Container Locally
         run: |
-          docker exec -u root audeed-global-mercadeo-ad-original-1 /bin/sh -c '
-            cd /var/www/audiid_gl &&
-            git checkout . &&
-            git pull origin main &&
-            echo Git Pull completado dentro del contenedor
-          '
+          TARGET_DIR="${{ secrets.SERVER_PROJECT_PATH }}"
+          if [ -z "$TARGET_DIR" ]; then
+            TARGET_DIR="/home/usrcustomer/projects/audeed-global-mercadeo"
+          fi
+
+          if [ ! -d "$TARGET_DIR" ]; then
+            echo "❌ La carpeta $TARGET_DIR no existe en el servidor."
+            echo "Asegúrate de verificar la ruta en el servidor o definir SERVER_PROJECT_PATH en GitHub Secrets."
+            exit 1
+          fi
+
+          cd "$TARGET_DIR"
+          if [ -f "docker-compose.prod.yml" ]; then
+            docker compose -f docker-compose.prod.yml up -d --no-deps ad-original
+          else
+            docker compose up -d --no-deps ad-original
+          fi

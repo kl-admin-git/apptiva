@@ -75,7 +75,7 @@ class MailRangoListaChequeo extends Mailable
 
     public function CantidadPlanAccionEjecutada($idEjecutada)
     {
-        $retorno = DB::select(DB::raw("SELECT 
+        $retorno = DB::select("SELECT 
         pre.nombre as pregunta,
         IF(res.valor_personalizado IS NULL, 'No aplica',res.valor_personalizado) as respuesta 
         -- paa.plan_accion_descripcion as plan_accion
@@ -87,7 +87,7 @@ class MailRangoListaChequeo extends Mailable
         LEFT JOIN plan_accion pa ON pa.respuesta_id=lcer.respuesta_id
         -- INNER JOIN plan_accion_automatico paa ON paa.plan_accion_id=pa.id
         WHERE lce.id=:idEjecutada
-        GROUP BY cat.id, pre.id"), ['idEjecutada' => $idEjecutada]);
+        GROUP BY cat.id, pre.id", ['idEjecutada' => $idEjecutada]);
 
         return COUNT($retorno);
     }

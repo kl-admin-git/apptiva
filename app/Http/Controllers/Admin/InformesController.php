@@ -34,7 +34,9 @@ class InformesController extends Controller
         $this->ejecutadasRespuestas = $ejecutadasRespuestas;
         $this->listaChequeo = $listaChequeo;
 
-        \DB::statement("SET lc_time_names = 'es_ES'");
+        try {
+            \DB::statement("SET lc_time_names = 'es_ES'");
+        } catch (\Throwable $e) {}
         $this->middleware('auth');
         $this->middleware('isActive');
     }
@@ -469,7 +471,7 @@ class InformesController extends Controller
         #region CODIOG FUNCIONAL PARA RESULTADOS FINALES CON AUDEED GLOBAL VERSIÓN 1
         // foreach ($traerInformeEjecutadas as $keyss => $ejecutada)
         // {
-        //     $categorias = \DB::select(\DB::raw("SELECT
+        //     $categorias = \DB::select("SELECT
         //         lcer.categoria_id,
         //         cat.nombre as categoria,
         //         lcer.no_aplica,
@@ -489,7 +491,7 @@ class InformesController extends Controller
         //         INNER JOIN categoria cat ON cat.id=pre.categoria_id
         //         WHERE  lcer.lista_chequeo_ejec_id=:idEjecutada
         //         GROUP BY lcer.categoria_id
-        //         ORDER BY cat.id;"),['idEjecutada' => $ejecutada->ID_EJECUTADA]);
+        //         ORDER BY cat.id;",['idEjecutada' => $ejecutada->ID_EJECUTADA]);
 
         //         $suma = 0;
         //         $todas_no_aplican = 0;
@@ -546,7 +548,7 @@ class InformesController extends Controller
             ->get();
 
 
-        $empresas = \DB::select(\DB::raw("SELECT 
+        $empresas = \DB::select("SELECT 
         (CASE
             WHEN lc.entidad_evaluada=1 THEN (SELECT semp.id FROM empresa semp WHERE semp.id=lce.evaluado_id)
             
@@ -597,7 +599,7 @@ class InformesController extends Controller
                                             
             WHEN lc.entidad_evaluada=4 THEN 'provisional'
             ELSE 'Error'
-        END);"), ['idCuentaPrincipal' => auth()->user()->cuenta_principal_id]);
+        END);", ['idCuentaPrincipal' => auth()->user()->cuenta_principal_id]);
 
         return view('Admin.informe_cumplimiento_lista', compact('listasDeChequeo', 'empresas'));
     }
@@ -736,7 +738,7 @@ class InformesController extends Controller
                 break;
         }
 
-        $laravelSQL = \DB::select(\DB::raw("SELECT 
+        $laravelSQL = \DB::select("SELECT 
         lce.id as id_lista_chequeo,
         empe.id as id_empresa,
         empe.nombre as empresa,
@@ -803,7 +805,7 @@ class InformesController extends Controller
         INNER JOIN establecimiento esta ON esta.id = usu.establecimiento_id
         INNER JOIN empresa empe ON empe.id = esta.empresa_id
         WHERE lce.estado = 2 AND lce.lista_chequeo_id = :idListaChequeo AND lce.fecha_realizacion BETWEEN :desde AND :hasta $queryComplemento
-        GROUP BY EMPRESA_EVALUADA;"), $valoresQueryUno);
+        GROUP BY EMPRESA_EVALUADA;", $valoresQueryUno);
 
 
         $arrayOrdenado = [];
@@ -895,7 +897,7 @@ class InformesController extends Controller
                 break;
         }
 
-        $laravelSQL = \DB::select(\DB::raw("SELECT 
+        $laravelSQL = \DB::select("SELECT 
         lce.id as id_lista_chequeo,
         empe.id as id_empresa,
         empe.nombre as empresa,
@@ -933,7 +935,7 @@ class InformesController extends Controller
         INNER JOIN establecimiento esta ON esta.id = usu.establecimiento_id
         INNER JOIN empresa empe ON empe.id = esta.empresa_id
         WHERE lce.lista_chequeo_id = :idListaChequeo AND lce.fecha_realizacion BETWEEN :desde AND :hasta $queryPrincipal
-        GROUP BY cat.id;"), $valoresQueryUno);
+        GROUP BY cat.id;", $valoresQueryUno);
 
         // $laravelSQL = $this->ejecutadasRespuestas
         // ->select(
@@ -1026,7 +1028,7 @@ class InformesController extends Controller
                 $valoresQuery['idEmpresa'] = $idEmpresa;
                 break;
         }
-        $laravelSQL = \DB::select(\DB::raw("SELECT 
+        $laravelSQL = \DB::select("SELECT 
         lc.entidad_evaluada,
         pr.nombre AS PREGUNTA,
         lcer.pregunta_id,
@@ -1057,7 +1059,7 @@ class InformesController extends Controller
         INNER JOIN usuario usu ON usu.id = lce.usuario_id
         INNER JOIN pregunta pr ON pr.id= lcer.pregunta_id
         WHERE usu.cuenta_principal_id=:idCuentaPrincipal AND re.ponderado = 0 AND lce.fecha_realizacion BETWEEN :desde AND :hasta AND lc.id=:idListaChequeo $queryComplemento
-        GROUP BY lcer.pregunta_id,ENTIDAD"), $valoresQuery);
+        GROUP BY lcer.pregunta_id,ENTIDAD", $valoresQuery);
 
 
         $arrayLimpio = [];
@@ -1075,7 +1077,7 @@ class InformesController extends Controller
 
     public function ValidarEmpresasPorPregunta($idPregunta)
     {
-        $empresas = \DB::select(\DB::raw("SELECT  empe.id,
+        $empresas = \DB::select("SELECT  empe.id,
             (CASE
                 WHEN lc.entidad_evaluada=1 THEN (SELECT semp.nombre FROM empresa semp WHERE semp.id=lces.evaluado_id)
                 
@@ -1114,7 +1116,7 @@ class InformesController extends Controller
                                                 
                 WHEN lc.entidad_evaluada=4 THEN 'provisional'
                 ELSE 'Error'
-            END);"), ['idPregunta' => $idPregunta]);
+            END);", ['idPregunta' => $idPregunta]);
 
         return $empresas;
     }
@@ -1188,7 +1190,7 @@ class InformesController extends Controller
         }
 
         //PUNTAJE SACADO DE LAS RESPUESTAS DE LISTA DE CHEQUEO POR ETIQUETA
-        $laravelSQL = \DB::select(\DB::raw("SELECT 
+        $laravelSQL = \DB::select("SELECT 
         ce.nombre AS ETIQUETA,
         TRUNCATE(SUM(IF ((TRUNCATE(((pre.ponderado*res.ponderado)/100),2)) IS NULL , pre.ponderado, (TRUNCATE(((pre.ponderado*res.ponderado)/100),2)))) / 
         (SELECT COUNT(*)
@@ -1210,17 +1212,17 @@ class InformesController extends Controller
         INNER JOIN empresa em ON em.id = es.empresa_id
         WHERE us.cuenta_principal_id = :idCuentaPrincipal AND lce.estado = 2 AND lce.lista_chequeo_id=:idListaChequeo $queryPrincipal
         AND lce.fecha_realizacion BETWEEN :desde AND :hasta
-        GROUP BY cat.id_etiqueta;"), $valoresQueryUno);
+        GROUP BY cat.id_etiqueta;", $valoresQueryUno);
 
 
         //PUNTAJE ORIGINAL QUE DEBERÍA DE SACAR POR ETIQUETA
-        $laravelSQLDos = \DB::select(\DB::raw("SELECT 
+        $laravelSQLDos = \DB::select("SELECT 
         ce.nombre AS ETIQUETA,
         SUM(cat.ponderado) TOTAL_ETIQUETA
         FROM categoria cat
         INNER JOIN categoria_etiquetas ce ON cat.id_etiqueta=ce.id
         WHERE cat.lista_chequeo_id=:idListaChequeo
-        GROUP BY cat.id_etiqueta;"), ['idListaChequeo' => $idListaChequeo]);
+        GROUP BY cat.id_etiqueta;", ['idListaChequeo' => $idListaChequeo]);
 
         $arrayOrdenado = [];
 
@@ -1306,8 +1308,7 @@ class InformesController extends Controller
             $where = " AND lce.fecha_realizacion BETWEEN '" . $desde . " 00:00:00' AND '" . $hasta . " 23:59:59'";
         }
 
-        $dataEmployees = \DB::select(
-            \DB::raw("SELECT
+        $dataEmployees = \DB::select("SELECT
                 lce.id AS LISTA_EJECT,
                 pr.nombre AS PREGUNTA,
                 DATE_FORMAT(lce.fecha_realizacion, '%d %M de %Y') AS FECHA_REALIZACION,
@@ -1327,7 +1328,7 @@ class InformesController extends Controller
                 INNER JOIN usuario us_ev ON lce.evaluado_id = us_ev.id
                 WHERE lce.lista_chequeo_id = $idCheckList
                 $where
-                ORDER BY pr.id ASC;")
+                ORDER BY pr.id ASC;"
         );
 
         $orderArray = [];
@@ -1414,8 +1415,7 @@ class InformesController extends Controller
             $where = " AND lce.fecha_realizacion BETWEEN '" . $desde . " 00:00:00' AND '" . $hasta . " 23:59:59'";
         }
 
-        $data = \DB::select(
-            \DB::raw("SELECT
+        $data = \DB::select("SELECT
                 lce.id AS LISTA_EJECT,
                 pr.nombre AS PREGUNTA,
                 DATE_FORMAT(lce.fecha_realizacion, '%d %M de %Y') AS FECHA_REALIZACION,
@@ -1436,7 +1436,7 @@ class InformesController extends Controller
                 INNER JOIN equipos eq ON lce.evaluado_id = eq.id
                 WHERE lce.lista_chequeo_id = $idCheckList
                 $where
-                ORDER BY pr.id ASC;")
+                ORDER BY pr.id ASC;"
         );
 
         $orderArray = [];
@@ -1526,8 +1526,7 @@ class InformesController extends Controller
             $where = " AND lce.fecha_realizacion BETWEEN '" . $dateTime['fechaInicio'] . " 00:00:00' AND '" . $dateTime['fechaFin'] . " 23:59:59'";
         }
 
-        $data = \DB::select(
-            \DB::raw("SELECT
+        $data = \DB::select("SELECT
             lce.id AS LISTA_EJECT,
             ca.id AS ID_CATEGORIA,
             ca.nombre AS CATEGORIA,
@@ -1550,7 +1549,7 @@ class InformesController extends Controller
             INNER JOIN usuario us ON lce.usuario_id = us.id
             WHERE lce.lista_chequeo_id = $idCheckList
             $where
-            ORDER BY pr.id ASC;")
+            ORDER BY pr.id ASC;"
         );
 
 
@@ -1690,37 +1689,37 @@ class InformesController extends Controller
         }
 
         // Primero, obtener el total de registros únicos (listas ejecutadas)
-        $totalRegistrosQuery = \DB::select(\DB::raw("
+        $totalRegistrosQuery = \DB::select("
             SELECT COUNT(DISTINCT lce.id) as total
             FROM lista_chequeo_ejecutadas lce 
             INNER JOIN lista_chequeo lc ON lce.lista_chequeo_id = lc.id
             WHERE lc.id = {$id_auditoria} {$whereFiltros}
-        "));
+        ");
 
         $totalRegistros = $totalRegistrosQuery[0]->total ?? 0;
         $totalPaginas = ceil($totalRegistros / $registrosPorPagina);
 
         // Obtener los IDs de las listas ejecutadas para esta página/totalidad
         if ($paginacion === null) {
-            $listaEjectIdsQuery = \DB::select(\DB::raw("
+            $listaEjectIdsQuery = \DB::select("
                 SELECT DISTINCT lce.id
                 FROM lista_chequeo_ejecutadas lce 
                 INNER JOIN lista_chequeo lc ON lce.lista_chequeo_id = lc.id
                 WHERE lc.id = {$id_auditoria} {$whereFiltros}
                 ORDER BY lce.id ASC
-            "));
+            ");
         } else {
             $paginaActual = $paginacion;
             $offset = ($paginaActual - 1) * $registrosPorPagina;
 
-            $listaEjectIdsQuery = \DB::select(\DB::raw("
+            $listaEjectIdsQuery = \DB::select("
                 SELECT DISTINCT lce.id
                 FROM lista_chequeo_ejecutadas lce 
                 INNER JOIN lista_chequeo lc ON lce.lista_chequeo_id = lc.id
                 WHERE lc.id = {$id_auditoria} {$whereFiltros}
                 ORDER BY lce.id ASC
                 LIMIT {$registrosPorPagina} OFFSET {$offset}
-            "));
+            ");
         }
 
         $listaEjectIds = array_map(function ($item) {
@@ -1746,7 +1745,7 @@ class InformesController extends Controller
         $idsString = implode(',', $listaEjectIds);
 
         // Ahora obtener todos los datos de esas listas ejecutadas
-        $datosQuery = \DB::select(\DB::raw("
+        $datosQuery = \DB::select("
             SELECT
                 DATE_FORMAT(lce.fecha_realizacion,'%d/%m/%Y') AS FECHA,
                 DATE_FORMAT(lce.fecha_realizacion,'%H:%i') AS HORA,
@@ -1770,7 +1769,7 @@ class InformesController extends Controller
             LEFT JOIN usuario us ON lce.revisado = us.id
             WHERE lc.id = {$id_auditoria} AND lce.id IN ({$idsString})
             ORDER BY lce.id ASC, p.id ASC
-        "));
+        ");
 
         $registrosAgrupados = [];
         $preguntasUnicas = [];
@@ -1941,37 +1940,37 @@ class InformesController extends Controller
         }
 
         // Primero, obtener el total de registros únicos (listas ejecutadas)
-        $totalRegistrosQuery = \DB::select(\DB::raw("
+        $totalRegistrosQuery = \DB::select("
             SELECT COUNT(DISTINCT lce.id) as total
             FROM lista_chequeo_ejecutadas lce 
             INNER JOIN lista_chequeo lc ON lce.lista_chequeo_id = lc.id
             WHERE lc.id = {$id_auditoria} {$whereFiltros}
-        "));
+        ");
 
         $totalRegistros = $totalRegistrosQuery[0]->total ?? 0;
         $totalPaginas = ceil($totalRegistros / $registrosPorPagina);
 
         // Obtener los IDs de las listas ejecutadas para esta página/totalidad
         if ($paginacion === null) {
-            $listaEjectIdsQuery = \DB::select(\DB::raw("
+            $listaEjectIdsQuery = \DB::select("
                 SELECT DISTINCT lce.id
                 FROM lista_chequeo_ejecutadas lce 
                 INNER JOIN lista_chequeo lc ON lce.lista_chequeo_id = lc.id
                 WHERE lc.id = {$id_auditoria} {$whereFiltros}
                 ORDER BY lce.id ASC
-            "));
+            ");
         } else {
             $paginaActual = $paginacion;
             $offset = ($paginaActual - 1) * $registrosPorPagina;
 
-            $listaEjectIdsQuery = \DB::select(\DB::raw("
+            $listaEjectIdsQuery = \DB::select("
                 SELECT DISTINCT lce.id
                 FROM lista_chequeo_ejecutadas lce 
                 INNER JOIN lista_chequeo lc ON lce.lista_chequeo_id = lc.id
                 WHERE lc.id = {$id_auditoria} {$whereFiltros}
                 ORDER BY lce.id ASC
                 LIMIT {$registrosPorPagina} OFFSET {$offset}
-            "));
+            ");
         }
 
         $listaEjectIds = array_map(function ($item) {
@@ -1997,7 +1996,7 @@ class InformesController extends Controller
         $idsString = implode(',', $listaEjectIds);
 
         // Ahora obtener todos los datos de esas listas ejecutadas
-        $datosQuery = \DB::select(\DB::raw("
+        $datosQuery = \DB::select("
             SELECT
                 DATE_FORMAT(lce.fecha_realizacion,'%d/%m/%Y') AS FECHA,
                 DATE_FORMAT(lce.fecha_realizacion,'%H:%i') AS HORA,
@@ -2021,7 +2020,7 @@ class InformesController extends Controller
             LEFT JOIN usuario us ON lce.revisado = us.id
             WHERE lc.id = {$id_auditoria} AND lce.id IN ({$idsString})
             ORDER BY lce.id ASC, p.id ASC
-        "));
+        ");
 
         $registrosAgrupados = [];
         $preguntasUnicas = [];

@@ -62,7 +62,9 @@ class ListaChequeoModelosController extends Controller
         $this->planAccion = $planAccion;
         $this->planAccionManual = $planAccionManual;
 
-        \DB::statement("SET lc_time_names = 'es_ES'");
+        try {
+            \DB::statement("SET lc_time_names = 'es_ES'");
+        } catch (\Throwable $e) {}
         $this->middleware('auth');
         $this->middleware('isActive');  
     }

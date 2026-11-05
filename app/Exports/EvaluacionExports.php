@@ -171,7 +171,7 @@ class EvaluacionExports implements  FromView,ShouldAutoSize
 
         foreach ($traerInformeEjecutadas as $keyss => $ejecutada)
         {
-            $categorias = \DB::select(\DB::raw("SELECT
+            $categorias = \DB::select("SELECT
                 lcer.categoria_id,
                 cat.nombre as categoria,
                 lcer.no_aplica,
@@ -191,7 +191,7 @@ class EvaluacionExports implements  FromView,ShouldAutoSize
                 INNER JOIN categoria cat ON cat.id=pre.categoria_id
                 WHERE  lcer.lista_chequeo_ejec_id=:idEjecutada
                 GROUP BY lcer.categoria_id
-                ORDER BY cat.id;"),['idEjecutada' => $ejecutada->ID_EJECUTADA]);
+                ORDER BY cat.id;",['idEjecutada' => $ejecutada->ID_EJECUTADA]);
 
                 $suma = 0;
                 $todas_no_aplican = 0;

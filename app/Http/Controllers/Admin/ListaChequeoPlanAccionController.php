@@ -46,7 +46,9 @@ class ListaChequeoPlanAccionController extends Controller
         $this->planAccionSeguimiento = $planAccionSeguimiento;
         $this->planAccionSeguimientoDetalle = $planAccionSeguimientoDetalle;
 
-        \DB::statement("SET lc_time_names = 'es_ES'");
+        try {
+            \DB::statement("SET lc_time_names = 'es_ES'");
+        } catch (\Throwable $e) {}
         $this->middleware('auth');
         $this->middleware('isActive');
     }
@@ -1411,7 +1413,7 @@ class ListaChequeoPlanAccionController extends Controller
 
     public function FuncionTraerPlanAccionCantidadTotal($cantidadDividir) // SE CAMBIO, SIRVE PERO NO SE USO
     {
-        $traerPlanAcciones = \DB::select(\DB::raw('SELECT
+        $traerPlanAcciones = \DB::select('SELECT
         lceo.id AS ID_EJECT_OPCIONES,
         DATE_FORMAT(lce.fecha_realizacion,"%d de %M %Y") AS FECHA_REALIZACION,
         lc.nombre,
@@ -1445,7 +1447,7 @@ class ListaChequeoPlanAccionController extends Controller
         INNER JOIN plan_accion_automatico paa ON paa.plan_accion_id=pa.id
         INNER JOIN lista_chequeo_ejec_opciones lceo ON lceo.lista_chequeo_ejec_respuestas_id=lcer.id
         LEFT JOIN lista_chequeo_ejec_planaccion lcep ON lcep.lista_chequeo_ejec_opciones=lceo.id
-        WHERE cta.id=:idCuentaPrincipal'),['idCuentaPrincipal' => auth()->user()->cuenta_principal_id]);
+        WHERE cta.id=:idCuentaPrincipal',['idCuentaPrincipal' => auth()->user()->cuenta_principal_id]);
 
         $array = array_chunk($traerPlanAcciones, $cantidadDividir);
 
@@ -1460,7 +1462,7 @@ class ListaChequeoPlanAccionController extends Controller
         $hasta = $resultadoLimit['hasta'];
         $cantidadRegistros = 9;
 
-        $traerPlanAcciones = \DB::select(\DB::raw('SELECT
+        $traerPlanAcciones = \DB::select('SELECT
         lceo.id AS ID_EJECT_OPCIONES,
         DATE_FORMAT(lce.fecha_realizacion,"%d de %M %Y") AS FECHA_REALIZACION,
         lc.nombre,
@@ -1494,7 +1496,7 @@ class ListaChequeoPlanAccionController extends Controller
         INNER JOIN plan_accion_automatico paa ON paa.plan_accion_id=pa.id
         INNER JOIN lista_chequeo_ejec_opciones lceo ON lceo.lista_chequeo_ejec_respuestas_id=lcer.id
         LEFT JOIN lista_chequeo_ejec_planaccion lcep ON lcep.lista_chequeo_ejec_opciones=lceo.id
-        WHERE cta.id=:idCuentaPrincipal LIMIT :desde,:hasta'),['idCuentaPrincipal' => auth()->user()->cuenta_principal_id,'desde'=> $desde,'hasta'=> $hasta]);
+        WHERE cta.id=:idCuentaPrincipal LIMIT :desde,:hasta',['idCuentaPrincipal' => auth()->user()->cuenta_principal_id,'desde'=> $desde,'hasta'=> $hasta]);
 
         return array(
             'cantidadTotal' => $this->FuncionTraerPlanAccionCantidadTotal(9),
@@ -1551,7 +1553,7 @@ class ListaChequeoPlanAccionController extends Controller
 
     public function TraerInformacionListaChequeoPlanAccion($idlistEject,$idPlanAccion)
     {
-        $trarInformacionListaChequeo = \DB::select(\DB::raw('SELECT 
+        $trarInformacionListaChequeo = \DB::select('SELECT 
             DATE_FORMAT(lce.fecha_realizacion,"%d de %M %Y") AS FECHA_REALIZACION,
             em.nombre AS EMPRESA,
             esta.nombre AS ESTABLECIMIENTO,
@@ -1564,7 +1566,7 @@ class ListaChequeoPlanAccionController extends Controller
             INNER JOIN establecimiento esta ON esta.id = us.establecimiento_id
             INNER JOIN empresa em ON em.id = esta.empresa_id
             INNER JOIN pregunta pr ON pr.id = pa.pregunta_id
-            WHERE pa.id = :idPlanAccion AND lce.id = :idlistEject;'),
+            WHERE pa.id = :idPlanAccion AND lce.id = :idlistEject;',
             ['idPlanAccion' => $idPlanAccion,
             'idlistEject' => $idlistEject]
         );
@@ -1574,7 +1576,7 @@ class ListaChequeoPlanAccionController extends Controller
 
     public function TraerInformacionPlanAccionManual($idlistEject,$idPlanAccion)
     {
-            $trarInformacionPlanAccionManual = \DB::select(\DB::raw('SELECT 
+            $trarInformacionPlanAccionManual = \DB::select('SELECT 
             pamo.opcion AS OPCION,
             IF((pamd.plan_accio_man_opc_id = 8 OR pamd.plan_accio_man_opc_id = 5),
                 (SELECT uss.nombre_completo FROM usuario AS uss WHERE uss.id=pamd.respuesta),
@@ -1586,7 +1588,7 @@ class ListaChequeoPlanAccionController extends Controller
             INNER JOIN pregunta pr ON pr.id = pa.pregunta_id
             INNER JOIN plan_accion_manu_det pamd ON pamd.lista_cheq_ejec_respuesta_id = lcer.id
             INNER JOIN plan_accion_man_opc pamo ON pamo.id = pamd.plan_accio_man_opc_id
-            WHERE pa.id = :idPlanAccion AND lce.id = :idlistEject;'),
+            WHERE pa.id = :idPlanAccion AND lce.id = :idlistEject;',
             ['idPlanAccion' => $idPlanAccion,
             'idlistEject' => $idlistEject]
         );
@@ -1596,14 +1598,14 @@ class ListaChequeoPlanAccionController extends Controller
 
     public function TraerEvidenciasFotosPlanAccion($idlistEject,$idPlanAccion)
     {
-        $trarInformacionFotosPlanAccionManual = \DB::select(\DB::raw('SELECT 
+        $trarInformacionFotosPlanAccionManual = \DB::select('SELECT 
         CONCAT("imagenes/listas_chequeo/",lcef.foto) AS FOTO
         FROM plan_accion pa
         INNER JOIN lista_chequeo_ejec_respuestas lcer ON lcer.pregunta_id = pa.pregunta_id
         INNER JOIN lista_chequeo_ejec_fotos lcef ON lcef.lista_chequeo_ejec_respuestas = lcer.id
         INNER JOIN lista_chequeo_ejecutadas lce ON lce.id = lcer.lista_chequeo_ejec_id
         INNER JOIN pregunta pr ON pr.id = pa.pregunta_id
-        WHERE pa.id = :idPlanAccion AND lce.id = :idlistEject;'),
+        WHERE pa.id = :idPlanAccion AND lce.id = :idlistEject;',
             ['idPlanAccion' => $idPlanAccion,
             'idlistEject' => $idlistEject]
         );
@@ -1613,7 +1615,7 @@ class ListaChequeoPlanAccionController extends Controller
 
     public function TraerEvidenciasAdjuntosPlanAccion($idlistEject,$idPlanAccion)
     {
-        $trarInformacionAdjuntosPlanAccionManual = \DB::select(\DB::raw('SELECT 
+        $trarInformacionAdjuntosPlanAccionManual = \DB::select('SELECT 
         lcea.id ID_ADJUNTO,
         lcea.archivo_codificado AS ADJUNTO,
         lcea.archivo_alias AS ALIAS
@@ -1622,7 +1624,7 @@ class ListaChequeoPlanAccionController extends Controller
         INNER JOIN lista_chequeo_ejec_archivos lcea ON lcea.lista_chequeo_ejec_respuesta_id = lcer.id
         INNER JOIN lista_chequeo_ejecutadas lce ON lce.id = lcer.lista_chequeo_ejec_id
         INNER JOIN pregunta pr ON pr.id = pa.pregunta_id
-        WHERE pa.id = :idPlanAccion AND lce.id = :idlistEject;'),
+        WHERE pa.id = :idPlanAccion AND lce.id = :idlistEject;',
             ['idPlanAccion' => $idPlanAccion,
             'idlistEject' => $idlistEject]
         );
@@ -1663,13 +1665,13 @@ class ListaChequeoPlanAccionController extends Controller
 
     public function TraerInformacionPlanAccionAutomatico($idlistEject,$idPlanAccion)
     {
-        $trarInformacionPlanAccionAutomatico = \DB::select(\DB::raw('SELECT 
+        $trarInformacionPlanAccionAutomatico = \DB::select('SELECT 
             paa.plan_accion_descripcion AS RESPUESTA_PLAN_ACCION
             FROM plan_accion pa
             INNER JOIN lista_chequeo_ejec_respuestas lcer ON lcer.pregunta_id = pa.pregunta_id
             INNER JOIN lista_chequeo_ejecutadas lce ON lce.id = lcer.lista_chequeo_ejec_id
             INNER JOIN plan_accion_automatico paa ON paa.plan_accion_id = pa.id
-            WHERE pa.id = :idPlanAccion AND lce.id = :idlistEject;'),
+            WHERE pa.id = :idPlanAccion AND lce.id = :idlistEject;',
             ['idPlanAccion' => $idPlanAccion,
             'idlistEject' => $idlistEject]
         );
@@ -1817,7 +1819,7 @@ class ListaChequeoPlanAccionController extends Controller
     {
         $idPlanDeAccion = $request->get('idPlanDeAccion');
 
-        $traerSeguimientos = \DB::select(\DB::raw('SELECT 
+        $traerSeguimientos = \DB::select('SELECT 
         pas.id AS ID_SEGUIMIENTO,
         (CASE
             WHEN pas.estado = 1 THEN "Abierto"
@@ -1838,7 +1840,7 @@ class ListaChequeoPlanAccionController extends Controller
         INNER JOIN usuario us ON us.id = pas.usuario_id
         LEFT JOIN cargo ca ON ca.id = us.cargo_id
         LEFT JOIN plan_accion_seguimiento_detalle pasd ON pasd.id_plan_accion_seguimiento = pas.id
-        WHERE pas.plan_accion_id = :idPlanDeAccion;'),
+        WHERE pas.plan_accion_id = :idPlanDeAccion;',
         ['idPlanDeAccion' => $idPlanDeAccion]);
 
         $arrayLimpio = [];

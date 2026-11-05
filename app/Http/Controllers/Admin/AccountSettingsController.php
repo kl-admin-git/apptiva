@@ -19,7 +19,9 @@ class AccountSettingsController extends Controller
         $this->planesPagos = $planesPagos;
         $this->tour = $tour;
         
-        \DB::statement("SET lc_time_names = 'es_ES'");
+        try {
+            \DB::statement("SET lc_time_names = 'es_ES'");
+        } catch (\Throwable $e) {}
         $this->middleware('auth');
         $this->middleware('isActive');
     }
